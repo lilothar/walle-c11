@@ -6,7 +6,8 @@
 #include <walle/net/Timer.h>
 #include <walle/net/Eventloop.h>
 #include <pthread.h>
-#include <boost/bind.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
+
 
 #include <signal.h>
 #include <sys/eventfd.h>
@@ -72,7 +73,7 @@ EventLoop::EventLoop()
     t_loopInThisThread = this;
   }
   _wakeupChannel->setReadCallback(
-      boost::bind(&EventLoop::handleRead, this));
+      std::bind(&EventLoop::handleRead, this));
   // we are always reading the wakeupfd
   _wakeupChannel->enableReading();
   LOG_DEBUG<<"EventLoop created "<<this<<" in thread "<<_threadId;

@@ -1,6 +1,6 @@
 #include <walle/net/wallenet.h>
 #include <walle/net/http/HttpClient.h>
-#include <boost/bind.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
 
 using namespace walle::net;
 using namespace walle::http;
@@ -32,8 +32,8 @@ int main()
 	req.setBody("hello");
 	req.addHeader("Content-Length","4");
 	req.addArg("name","walle");
-	httpclient->setResponseCallback(boost::bind(mycb,_1));
-	httpclient->setHttpCloseCallback(boost::bind(myclose,_1));
+	httpclient->setResponseCallback(std::bind(mycb,_1));
+	httpclient->setHttpCloseCallback(std::bind(myclose,_1));
 	httpclient->start();
 	while(run) {
 		sleep(1);

@@ -1,11 +1,7 @@
 #ifndef DYLIN_CHANNEL_H_
 #define DYLIN_CHANNEL_H_
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
-
 #include <walle/sys/wallesys.h>
-
+#include <walle/smart_ptr/smart_ptr.h>
 using namespace walle::sys;
 
 namespace walle {
@@ -14,8 +10,8 @@ class EventLoop;
 
 class Channel {
  public:
-  typedef boost::function<void()> EventCallback;
-  typedef boost::function<void(Time)> ReadEventCallback;
+  typedef std::function<void()> EventCallback;
+  typedef std::function<void(Time)> ReadEventCallback;
   Channel();
   Channel(EventLoop* loop, int sockfd);
   ~Channel();
@@ -33,7 +29,7 @@ class Channel {
 
   /// Tie this channel to the owner object managed by shared_ptr,
   /// prevent the owner object being destroyed in handleEvent.
-  void tie(const boost::shared_ptr<void>&);
+  void tie(const std::shared_ptr<void>&);
 
   int fd() const { return _fd; }
   int events() const { return _events; }
@@ -75,7 +71,7 @@ class Channel {
   int                   _index; // used by Poller.
   bool                  _logHup;
 
-  boost::weak_ptr<void> _tie;
+  std::weak_ptr<void> _tie;
   bool                  _tied;
   bool                  _eventHandling;
   bool                  _addedToLoop;

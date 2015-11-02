@@ -5,9 +5,7 @@
 #include <walle/sys/CountDown.h>
 #include <walle/sys/Mutex.h>
 #include <walle/sys/Thread.h>
-
-#include <boost/bind.hpp>
-#include <boost/noncopyable.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
 #include <vector>
 
 namespace walle {

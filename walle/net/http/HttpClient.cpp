@@ -1,5 +1,5 @@
 #include <walle/net/http/HttpClient.h>
-#include <boost/bind.hpp>
+#include <walle/smart_ptr/smarrt_ptr.h>
 
 using namespace walle::net;
 using namespace walle::sys;
@@ -31,9 +31,9 @@ void HttpClient::start()
 	AddrInet serverAddr(_request.getHost().c_str(), _request.getPort());
 	
 	_client = new TcpClient(_loop,serverAddr,"HttpClient");
-	_client->setConnectionCallback(boost::bind(&HttpClient::onConnection,this,_1));
-	_client->setMessageCallback(boost::bind(&HttpClient::onMessage,this,_1,_2,_3));
-	_client->setWriteCompleteCallback(boost::bind(&HttpClient::onWriteComplete,this,_1));
+	_client->setConnectionCallback(std::bind(&HttpClient::onConnection,this,_1));
+	_client->setMessageCallback(std::bind(&HttpClient::onMessage,this,_1,_2,_3));
+	_client->setWriteCompleteCallback(std::bind(&HttpClient::onWriteComplete,this,_1));
 	_client->connect();
 }
 void HttpClient::stop()

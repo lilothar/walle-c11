@@ -1,7 +1,6 @@
 #ifndef DYLIN_ACCEPTOR_H_
 #define DYLIN_ACCEPTOR_H_
-#include <boost/function.hpp>
-#include <boost/noncopyable.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
 
 #include <walle/net/Channel.h>
 #include <walle/net/Socket.h>
@@ -12,11 +11,10 @@ namespace net {
 class EventLoop;
 class AddrInet;
 
-class Acceptor : boost::noncopyable
+class Acceptor 
 {
  public:
-  typedef boost::function<void (int sockfd,
-                                 AddrInet&)> NewConnectionCallback;
+  typedef std::function<void (int sockfd,AddrInet&)> NewConnectionCallback;
 
   Acceptor(EventLoop* loop,  AddrInet& listenAddr, bool reuseport );
   ~Acceptor();

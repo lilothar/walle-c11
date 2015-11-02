@@ -4,7 +4,7 @@
 #include <walle/net/Eventloop.h>
 #include <walle/net/Addrinet.h>
 
-#include <boost/bind.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
 
 #include <errno.h>
 #include <fcntl.h>
@@ -30,7 +30,7 @@ Acceptor::Acceptor(EventLoop* loop,  AddrInet& listenAddr, bool reuseport)
   _acceptSocket.setReuseAddress(reuseport);
   _acceptChannel.setUp(_loop,_acceptSocket.getFd());
   _acceptChannel.setReadCallback(
-  boost::bind(&Acceptor::handleRead, this));
+  std::bind(&Acceptor::handleRead, this));
 }
 
 Acceptor::~Acceptor()

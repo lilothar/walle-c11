@@ -1,7 +1,6 @@
 #ifndef DYLIN_TCPCLIENT_H_
 #define DYLIN_TCPCLIENT_H_
-#include <boost/noncopyable.hpp>
-
+#include <walle/smart_ptr/smart_ptr.h>
 #include <walle/sys/Mutex.h>
 #include <walle/net/TcpConnection.h>
 #include <walle/net/Addrinet.h>
@@ -10,9 +9,9 @@ namespace walle {
 namespace net{
 
 class Connector;
-typedef boost::shared_ptr<Connector> ConnectorPtr;
+typedef std::shared_ptr<Connector> ConnectorPtr;
 
-class TcpClient : boost::noncopyable
+class TcpClient 
 {
  public:
   TcpClient(EventLoop* loop,
@@ -54,7 +53,6 @@ class TcpClient : boost::noncopyable
   void newConnection(int sockfd);
   /// Not thread safe, but in loop
   void removeConnection(const TcpConnectionPtr& conn);
-
   EventLoop* _loop;
   AddrInet _serveraddr;
   ConnectorPtr _connector; // avoid revealing Connector

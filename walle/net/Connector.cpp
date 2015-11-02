@@ -3,7 +3,8 @@
 #include <walle/net/Channel.h>
 #include <walle/net/Eventloop.h>
 #include <walle/net/Socket.h>
-#include <boost/bind.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
+
 
 #include <errno.h>
 
@@ -33,7 +34,7 @@ Connector::~Connector()
 void Connector::start()
 {
   _connect = true;
-  _loop->runInLoop(boost::bind(&Connector::startInLoop, this));
+  _loop->runInLoop(std::bind(&Connector::startInLoop, this));
   LOG_DEBUG<<"connector start "<<this;
 }
 
@@ -53,7 +54,7 @@ void Connector::stop()
 {
 	LOG_DEBUG<<"connector stop "<<this;
   _connect = false;
-  _loop->queueInLoop(boost::bind(&Connector::stopInLoop, this)); 
+  _loop->queueInLoop(std::bind(&Connector::stopInLoop, this)); 
 }
 
 void Connector::stopInLoop()
@@ -128,9 +129,9 @@ void Connector::connecting(int sockfd)
   assert(!_channel);
   _channel.reset(new Channel(_loop, sockfd));
   _channel->setWriteCallback(
-      boost::bind(&Connector::handleWrite, this)); // FIXME: unsafe
+      std::bind(&Connector::handleWrite, this)); // FIXME: unsafe
   _channel->setErrorCallback(
-      boost::bind(&Connector::handleError, this)); // FIXME: unsafe
+      std::bind(&Connector::handleError, this)); // FIXME: unsafe
   _channel->enableWriting();
 }
 
@@ -141,7 +142,7 @@ int Connector::removeAndResetChannel()
   _channel->disableAll();
   _channel->remove();
   int sockfd = _channel->fd();
-  _loop->queueInLoop(boost::bind(&Connector::resetChannel, this));
+  _loop->queueInLoop(std::bind(&Connector::resetChannel, this));
   return sockfd;
 }
 
@@ -209,7 +210,7 @@ void Connector::retry(int sockfd)
  	 if (_connect)
 	  {
 	    _loop->runAfter(_retryDelayMs*1000,
-                    boost::bind(&Connector::startInLoop, shared_from_this()));
+                    std::bind(&Connector::startInLoop, shared_from_this()));
  	   _retryDelayMs = std::min(_retryDelayMs * 2, kMaxRetryDelayMs);
  	 }
 }

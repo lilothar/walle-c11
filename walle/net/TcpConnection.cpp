@@ -3,7 +3,7 @@
 #include <walle/net/Eventloop.h>
 #include <walle/net/Socket.h>
 #include <walle/sys/Weakcall.h>
-#include <boost/bind.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
 
 #include <errno.h>
 
@@ -38,17 +38,18 @@ TcpConnection::TcpConnection(EventLoop* loop,
     _channel(new Channel(loop, sockfd)),
     _localAddr(localAddr),
     _peerAddr(peerAddr),
-    _highWaterMark(64*1024*1024)
+    _highWaterMark(64*1024*1024),
+    _lastOption(Time::now())
 {
 	_socket->setFd(sockfd);
 	_channel->setReadCallback(
-	boost::bind(&TcpConnection::handleRead, this, _1));
+	std::bind(&TcpConnection::handleRead, this, _1));
 	_channel->setWriteCallback(
-	boost::bind(&TcpConnection::handleWrite, this));
+	std::bind(&TcpConnection::handleWrite, this));
 	_channel->setCloseCallback(
-	boost::bind(&TcpConnection::handleClose, this));
+	std::bind(&TcpConnection::handleClose, this));
 	_channel->setErrorCallback(
-	boost::bind(&TcpConnection::handleError, this));
+	std::bind(&TcpConnection::handleError, this));
 	
 	LOG_DEBUG<<"TcpConnection::connect[ "<<_name<<" ] at fd="<<sockfd;
 	_socket->setKeepAlive(true);
@@ -81,18 +82,18 @@ void TcpConnection::send(const void* data, int len)
 
 void TcpConnection::send(const StringPice& message)
 {
-  if (_state == kConnected)
-  {
-    if (_loop->isInLoopThread())
-    {
+  if (_state == kConnected) {
+    if (_loop->isInLoopThread()) {
       sendInLoop(message);
-    }
-    else
-    {
+    } else {
+     Buffer *buf = new Buffer();
+	 buf->append(message);
+	 ScopeLock lock(&_buffersLock);
+	 _buffers.push_back(buf);
+	 _bufferedSize.getAndAdd(message.size());
       _loop->runInLoop(
-          boost::bind(&TcpConnection::sendInLoop,
-                      this,     // FIXME
-                      message.ToString()));
+          std::bind(&TcpConnection::sendQueue,
+                      this));
     }
   }
 }
@@ -103,17 +104,18 @@ void TcpConnection::send(Buffer* buf)
 	LOG_DEBUG<<"TcpConnection::send";
   if (_state == kConnected)
   {
-    if (_loop->isInLoopThread())
-    {
+    if (_loop->isInLoopThread()) {
       sendInLoop(buf->peek(), buf->readableBytes());
       buf->retrieveAll();
-    }
-    else
-    {
+	} else {
+		Buffer *queueBuff = new Buffer();
+	 	queueBuff->swap(buf);
+	 	ScopeLock lock(&_buffersLock);
+	 	_buffers.push_back(queueBuff);
+	 	_bufferedSize.getAndAdd(queueBuff->readableBytes());
       _loop->runInLoop(
-          boost::bind(&TcpConnection::sendInLoop,
-                      this,     // FIXME
-                      buf->retrieveAllAsString()));
+          std::bind(&TcpConnection::sendQueue,
+                      this));
     }
   }
 }
@@ -137,19 +139,17 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
     return;
   }
   // if no thing in output queue, try writing directly
-  if (!_channel->isWriting() && _outputBuffer.readableBytes() == 0)
-  {
+  if (!_channel->isWriting() &&
+  	   _outputBuffer.readableBytes() == 0 &&
+  	   _buffers.size() == 0) {
     nwrote = ::write(_channel->fd(), data, len);
     if (nwrote >= 0)
     {
       remaining = len - nwrote;
-      if (remaining == 0 && _writeCompleteCallback)
-      {
-        _loop->queueInLoop(boost::bind(_writeCompleteCallback,shared_from_this()));
+      if (remaining == 0 && _writeCompleteCallback) {
+        _loop->queueInLoop(std::bind(_writeCompleteCallback,shared_from_this()));
       }
-    }
-    else // nwrote < 0
-    {
+    } else {
       nwrote = 0;
       if (errno != EWOULDBLOCK)
       {
@@ -168,8 +168,9 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
     if (oldLen + remaining >= _highWaterMark
         && oldLen < _highWaterMark
         && _highWaterMarkCallback) {
-      _loop->queueInLoop(boost::bind(_highWaterMarkCallback, 
-	  	shared_from_this(), oldLen + remaining));
+      _loop->queueInLoop(std::bind(_highWaterMarkCallback, 
+	  	shared_from_this(), 
+	  	oldLen + remaining));
     }
     _outputBuffer.append(static_cast<const char*>(data)+nwrote, remaining);
     if (!_channel->isWriting())
@@ -187,7 +188,7 @@ void TcpConnection::shutdown()
   {
     setState(kDisconnecting);
     // FIXME: shared_from_this()?
-    _loop->runInLoop(boost::bind(&TcpConnection::shutdownInLoop, this));
+    _loop->runInLoop(std::bind(&TcpConnection::shutdownInLoop, this));
 	_loop->wakeup();
   }
 }
@@ -210,7 +211,7 @@ void TcpConnection::forceClose()
   if (_state == kConnected || _state == kDisconnecting)
   {
     setState(kDisconnecting);
-    _loop->queueInLoop(boost::bind(&TcpConnection::forceCloseInLoop, 
+    _loop->queueInLoop(std::bind(&TcpConnection::forceCloseInLoop, 
 			shared_from_this()));
   }
 }
@@ -313,7 +314,7 @@ void TcpConnection::handleWrite()
       if (_outputBuffer.readableBytes() == 0) {
 	  	_channel->disableWriting();
         if (_writeCompleteCallback) {
-			_loop->queueInLoop(boost::bind(_writeCompleteCallback, 
+			_loop->queueInLoop(std::bind(_writeCompleteCallback, 
 										shared_from_this()));
         }
        	if (_state == kDisconnecting) {

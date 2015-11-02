@@ -3,7 +3,7 @@
 #include <walle/net/Eventloop.h>
 #include <walle/net/Eventloopthread.h>
 
-#include <boost/bind.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
 
 using namespace walle::sys;
 namespace walle {
@@ -19,10 +19,14 @@ EventLoopThreadPool::EventLoopThreadPool(EventLoop* baseLoop)
 
 EventLoopThreadPool::~EventLoopThreadPool()
 {
-  // Don't delete loop, it's stack variable
+  _loops.clear();
+  for(size_t i = 0; i < _threads.size(); i++) {
+		delete _threads[i];
+  }
+  _threads.clear();
 }
 
-void EventLoopThreadPool::start(const ThreadInitCallback& cb)
+void EventLoopThreadPool::start(ThreadInitCallback cb)
 {
   assert(!_started);
   _baseLoop->assertInLoopThread();
@@ -35,9 +39,10 @@ void EventLoopThreadPool::start(const ThreadInitCallback& cb)
     _threads.push_back(t);
     _loops.push_back(t->startLoop());
   }
-  if (_numThreads == 0 && cb)
-  {
-    cb(_baseLoop);
+  if (_numThreads == 0 ) {
+  	if(cb) {
+    	cb(_baseLoop);
+  	}
   }
 }
 

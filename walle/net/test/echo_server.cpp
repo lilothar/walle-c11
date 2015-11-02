@@ -1,7 +1,7 @@
 #include <walle/net/wallenet.h>
 
 #include <walle/sys/wallesys.h>
-#include <boost/bind.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
 
 #include <utility>
 
@@ -22,9 +22,9 @@ class EchoServer
       _server(loop, listenAddr, "EchoServer")
   {
     _server.setConnectionCallback(
-        boost::bind(&EchoServer::onConnection, this, _1));
+        std::bind(&EchoServer::onConnection, this, _1));
     _server.setMessageCallback(
-        boost::bind(&EchoServer::onMessage, this, _1, _2, _3));
+        std::bind(&EchoServer::onMessage, this, _1, _2, _3));
     _server.setThreadNum(numThreads);
   }
 

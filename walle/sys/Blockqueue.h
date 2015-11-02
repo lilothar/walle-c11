@@ -4,7 +4,6 @@
 #include <walle/sys/Cond.h>
 #include <walle/sys/Mutex.h>
 #include <walle/sys/ScopeLock.h>
-#include <boost/noncopyable.hpp>
 #include <deque>
 #include <assert.h>
 
@@ -13,7 +12,7 @@ namespace sys {
 
 template<typename T>
     
-class BlockQueue : boost::noncopyable
+class BlockQueue 
 {
  public:
   BlockQueue()

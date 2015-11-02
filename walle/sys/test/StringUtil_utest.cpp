@@ -105,7 +105,7 @@ main(int argc, char* argv[])
 		ts.add(auto_ptr<unit::Suite>(new StringUtilUtest));
 		// Run the tests
 		//
-		auto_ptr<unit::Output> output(cmdline(argc, argv));
+		scoped_ptr<unit::Output> output(cmdline(argc, argv));
 		ts.run(*output, true);
 
 		unit::HtmlOutput* const html = dynamic_cast<unit::HtmlOutput*>(output.get());

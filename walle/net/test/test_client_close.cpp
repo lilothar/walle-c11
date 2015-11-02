@@ -2,7 +2,7 @@
 #include <walle/net/Eventloopthread.h>
 #include <walle/net/Tcpclient.h>
 
-#include <boost/bind.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
 
 using namespace walle::sys;
 using namespace walle::net;

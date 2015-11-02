@@ -2,8 +2,7 @@
 #define DYLIN_EVENTLOOPTHREADPOOL_H_
 
 #include <vector>
-#include <boost/function.hpp>
-#include <boost/ptr_container/ptr_vector.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
 
 namespace walle {
 namespace net{
@@ -14,12 +13,12 @@ class EventLoopThread;
 class EventLoopThreadPool
 {
  public:
-  typedef boost::function<void(EventLoop*)> ThreadInitCallback;
+  typedef std::function<void(EventLoop*)> ThreadInitCallback;
 
   EventLoopThreadPool(EventLoop* baseLoop);
   ~EventLoopThreadPool();
   void setThreadNum(int numThreads) { _numThreads = numThreads; }
-  void start(const ThreadInitCallback& cb = ThreadInitCallback());
+  void start(ThreadInitCallback  cb = ThreadInitCallback());
 
   // valid after calling start()
   /// round-robin
@@ -39,7 +38,7 @@ class EventLoopThreadPool
   bool _started;
   int _numThreads;
   int _next;
-  boost::ptr_vector<EventLoopThread> _threads;
+  std::vector<EventLoopThread*> _threads;
   std::vector<EventLoop*> _loops;
 };
 }

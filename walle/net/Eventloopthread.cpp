@@ -2,7 +2,8 @@
 
 #include <walle/net/Eventloop.h>
 
-#include <boost/bind.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
+
 
 using namespace walle::sys;
 

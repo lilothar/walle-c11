@@ -1,13 +1,13 @@
 #include <walle/sys/wallesys.h>
 #include <walle/net/wallenet.h>
-#include <boost/bind.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
 
 using namespace walle::net;
 using namespace walle::sys;
 
 int numThreads = 0;
 class Echoclient;
-boost::ptr_vector<Echoclient> clients;
+std::ptr_vector<Echoclient> clients;
 size_t current = 0;
 
 class Echoclient{
@@ -15,8 +15,8 @@ class Echoclient{
 		Echoclient(EventLoop* loop,  AddrInet& listenAddr, const string& id): _loop(loop),
 								_client(loop, listenAddr, "EchoClient"+id)
 		{
-			_client.setConnectionCallback(boost::bind(&Echoclient::onConnection, this, _1));
-			_client.setMessageCallback(boost::bind(&Echoclient::onMessage, this, _1, _2, _3));
+			_client.setConnectionCallback(std::bind(&Echoclient::onConnection, this, _1));
+			_client.setMessageCallback(std::bind(&Echoclient::onMessage, this, _1, _2, _3));
 		}
 		~Echoclient()
 		{

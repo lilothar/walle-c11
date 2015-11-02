@@ -1,6 +1,6 @@
 #include <walle/net/wallenet.h>
-#include <boost/bind.hpp>
-#include <boost/bind.hpp>
+#include <walle/smart_ptr/smart_ptr.h>
+
 using namespace walle::net;
 
 class HoleServer{
@@ -12,11 +12,11 @@ class HoleServer{
 			  _server(loop, listenAddr, "holeServer")
 		  {
 			_server.setConnectionCallback(
-				boost::bind(&HoleServer::onConnection, this, _1));
+				std::bind(&HoleServer::onConnection, this, _1));
 			_server.setMessageCallback(
-				boost::bind(&HoleServer::onMessage, this, _1, _2, _3));
+				std::bind(&HoleServer::onMessage, this, _1, _2, _3));
 			_server.setThreadNum(threadnum);
-			_loop->runEvery(3000*1000,boost::bind(&HoleServer::log, this));
+			_loop->runEvery(3000*1000,std::bind(&HoleServer::log, this));
 		  }
 	void start()
   	{
